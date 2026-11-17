@@ -6,18 +6,17 @@
  *
  * 檢查項目
  *   ・沒有橫向捲動、文字沒有超出畫面或被裁掉
- *   ・所有文字 ≥ 20px；電話、地址、營業時間、營業狀態、待補標記 ≥ 28px
+ *   ・所有文字 ≥ 20px；地址、電話、商品類別 ≥ 28px
  *   ・文字與底色對比 ≥ 7:1
  *   ・可按的元件 ≥ 56px 高，彼此間距 ≥ 8px
  *   ・每個字都有內嵌字體可用（沒有掉回系統字體）
  *   ・不連任何外部資源、程式沒有錯誤
- *   ・「現在有沒有開」的判斷邏輯（用假的營業時間＋假的時鐘測試，不會寫進網頁），
- *     三種狀態的版面都要過上面的檢查；營業時間的星期寫錯也不能讓頁面卡死
- *   ・成品 index.html 和原始檔 src/index.html 同步（沒有忘記跑 build）
- *   ・手機第一個畫面看得到店名、店章、介紹和營業狀態
+ *   ・照片：都載得到、有替代文字、寫了寬高（載入時版面不跳動）、不超出畫面，
+ *     單張 ≤ 200 KB，整頁（含照片）≤ 1.2 MB
+ *   ・成品 index.html 和原始檔 index.src.html 同步（沒有忘記跑 build）
+ *   ・手機第一個畫面看得到店名、店章、介紹
  */
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const { chromium } = require('playwright');
 
@@ -64,7 +63,7 @@ function audit() {
     });
   });
 
-  const BIG = '.big, .num, #status b, #status small, .tbd';
+  const BIG = '.big, .num, .cat';
   let minSize = Infinity, minBig = Infinity, minContrast = Infinity;
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) {
@@ -132,32 +131,28 @@ function audit() {
     }
   }
 
+  /* 照片 */
+  document.querySelectorAll('img').forEach((img) => {
+    const name = img.getAttribute('src');
+    if (!img.complete || !img.naturalWidth) problems.push(`照片載不到：${name}`);
+    if (!img.getAttribute('alt')) problems.push(`照片沒有替代文字：${name}`);
+    if (!img.getAttribute('width') || !img.getAttribute('height')) problems.push(`照片沒寫寬高：${name}`);
+    const b = img.getBoundingClientRect();
+    if (b.right > de.clientWidth + 0.5 || b.left < -0.5) problems.push(`照片超出畫面：${name}`);
+  });
+
   const bar = document.querySelector('.bar');
   return {
     problems,
     minSize, minBig, minContrast: +minContrast.toFixed(2), minTap, minGap,
     barHeight: bar ? Math.round(bar.getBoundingClientRect().height) : 0,
     pageHeight: de.scrollHeight,
-    firstScreen: [...document.querySelectorAll('.name, .seal, .intro, .now')].every((el) => {
+    firstScreen: [...document.querySelectorAll('.name, .seal, .intro')].every((el) => {
       const b = el.getBoundingClientRect();
       return b.bottom <= innerHeight - (bar ? bar.getBoundingClientRect().height : 0);
     }),
   };
 }
-
-/* 假的營業時間＋假的時鐘，測「現在有沒有開」 */
-const SAMPLE_HOURS =
-  '<p class="big" data-days="1-6" data-open="08:30" data-close="21:00"><span>週一至週六</span><span>8:30–21:00</span></p>' +
-  '<p class="big" data-days="0"><span>週日</span><span>公休</span></p>';
-const STATUS_CASES = [
-  // [臺灣時間, 預期狀態, 預期說明]
-  ['2026-11-10T10:00:00+08:00', '營業中', '到 晚上 9:00'],             // 週二白天
-  ['2026-11-10T07:15:00+08:00', '休息中', '上午 8:30 開門'],           // 週二開門前
-  ['2026-11-10T21:00:00+08:00', '休息中', '明天 上午 8:30 開門'],      // 週二剛打烊
-  ['2026-11-14T23:30:00+08:00', '休息中', '週一 上午 8:30 開門'],      // 週六深夜，隔天公休
-  ['2026-11-15T12:00:00+08:00', '今日公休', '明天 上午 8:30 開門'],    // 週日
-  ['2026-11-10T00:05:00+08:00', '休息中', '上午 8:30 開門'],           // 跨日（UTC 還在前一天）
-];
 
 (async () => {
   const browser = await chromium.launch();
@@ -173,11 +168,19 @@ const STATUS_CASES = [
     page.on('pageerror', (e) => errors.push(String(e)));
     await page.goto('file://' + HTML);
     await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(async () => {             // 一路捲到底，讓延遲載入的照片都載進來
+      for (let y = 0; y < document.documentElement.scrollHeight; y += innerHeight / 2) {
+        scrollTo(0, y);
+        await new Promise((r) => setTimeout(r, 60));
+      }
+      await Promise.all([...document.images].map((img) => img.decode().catch(() => {})));
+      scrollTo(0, 0);
+    });
     await page.waitForTimeout(1500);              // 等店章的進場動畫結束
     const result = await page.evaluate(audit);
     external.forEach((u) => result.problems.push('連到外部資源：' + u));
     errors.forEach((e) => result.problems.push('程式錯誤：' + e));
-    if (size.width <= 412 && !result.firstScreen) result.problems.push('第一個畫面放不下店名、店章、介紹、營業狀態');
+    if (size.width <= 412 && !result.firstScreen) result.problems.push('第一個畫面放不下店名、店章、介紹');
     const { problems, ...numbers } = result;
     console.log(size.name.padEnd(13), JSON.stringify(numbers));
     problems.forEach((p) => { failed = true; console.log('   ✗ ' + p); });
@@ -192,60 +195,23 @@ const STATUS_CASES = [
   /* 成品和原始檔有沒有同步 */
   const source = fs.readFileSync(HTML, 'utf8');
   const strip = (s) => s.replace(/\/\* FONTS:BEGIN \*\/[\s\S]*?\/\* FONTS:END \*\//, '');
-  const SRC = path.resolve(__dirname, '..', 'src', 'index.html');
+  const SRC = path.resolve(__dirname, '..', 'index.src.html');
   if (fs.existsSync(SRC) && strip(fs.readFileSync(SRC, 'utf8')) !== strip(source)) {
     failed = true;
-    console.log('   ✗ index.html 和 src/index.html 不同步，請先執行 node tools/build.js');
+    console.log('   ✗ index.html 和 index.src.html 不同步，請先執行 node tools/build.js');
   }
 
-  /* 營業狀態邏輯 */
-  const withHours = source.replace(/(<div id="hours">)[\s\S]*?(<\/div>)/, '$1' + SAMPLE_HOURS + '$2');
-  if (withHours === source) { failed = true; console.log('   ✗ 找不到 #hours，無法測營業狀態'); }
-  const sample = path.join(os.tmpdir(), 'receipt-sample-hours.html');
-  fs.writeFileSync(sample, withHours);
-  const shot = {};
-  for (const [when, word, note] of STATUS_CASES) {
-    const context = await browser.newContext({ viewport: { width: 360, height: 640 }, timezoneId: 'America/New_York' });
-    const page = await context.newPage();
-    await page.addInitScript((ms) => { Date.now = () => ms; }, new Date(when).getTime());
-    await page.goto('file://' + sample);
-    const got = await page.evaluate(() => ({
-      word: (document.querySelector('#status b') || {}).textContent || '',
-      note: (document.querySelector('#status small') || {}).textContent || '',
-      today: [...document.querySelectorAll('#hours .is-today')].map((el) => el.textContent).join('|'),
-      date: document.getElementById('date').textContent,
-    }));
-    const ok = got.word === word && got.note === note;
-    if (!ok) failed = true;
-    console.log(`${ok ? '   ✓' : '   ✗'} ${when} → ${got.word}／${got.note}（今天那列：${got.today}；日期：${got.date}）` + (ok ? '' : `  預期 ${word}／${note}`));
-    await page.evaluate(() => document.fonts.ready);
-    await page.waitForTimeout(1500);
-    const result = await page.evaluate(audit);
-    result.problems.forEach((p) => { failed = true; console.log('   ✗ （' + got.word + '）' + p); });
-    if (OUT && !shot[got.word]) {
-      shot[got.word] = true;
-      await page.addStyleTag({ content: '.bar{display:none}' });
-      await page.screenshot({ path: path.join(OUT, 'sample-hours-' + Object.keys(shot).length + '.png'), fullPage: true });
-    }
-    await context.close();
+  /* 照片檔案大小 */
+  let total = fs.statSync(HTML).size;
+  for (const src of [...source.matchAll(/<img[^>]+src="([^"]+)"/g)].map((m) => m[1])) {
+    const file = path.resolve(path.dirname(HTML), src);
+    if (!fs.existsSync(file)) { failed = true; console.log('   ✗ 找不到照片檔：' + src); continue; }
+    const kb = fs.statSync(file).size / 1024;
+    total += fs.statSync(file).size;
+    if (kb > 200) { failed = true; console.log(`   ✗ 照片太大 ${kb.toFixed(0)} KB：${src}`); }
   }
-
-  /* 星期寫錯：頁面不能卡死，其他列照常運作 */
-  {
-    const bad = path.join(os.tmpdir(), 'receipt-bad-hours.html');
-    fs.writeFileSync(bad, withHours.replace('data-days="1-6"', 'data-days="1-7"'));
-    const context = await browser.newContext({ viewport: { width: 360, height: 640 } });
-    const page = await context.newPage();
-    page.setDefaultTimeout(5000);
-    let ok = false;
-    try {
-      await page.goto('file://' + bad, { timeout: 5000 });
-      ok = (await page.evaluate(() => document.getElementById('date').hidden)) === false;
-    } catch (e) { ok = false; }
-    if (!ok) failed = true;
-    console.log((ok ? '   ✓' : '   ✗') + ' 星期寫成 1-7：頁面' + (ok ? '沒有卡死' : '卡死或沒有回應'));
-    await context.close().catch(() => {});
-  }
+  console.log(`整頁大小（含照片）：${(total / 1024).toFixed(0)} KB`);
+  if (total > 1.2 * 1024 * 1024) { failed = true; console.log('   ✗ 整頁超過 1.2 MB'); }
 
   await browser.close();
   console.log(failed ? '\n有項目沒通過。' : '\n全部通過。');

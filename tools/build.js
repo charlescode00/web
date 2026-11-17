@@ -4,14 +4,14 @@
  *
  *     node tools/build.js
  *
- * 原始檔是 src/index.html（沒有字體資料，好讀好改）。這支程式會：
+ * 原始檔是 index.src.html（沒有字體資料，好讀好改）。這支程式會：
  *   1. 用瀏覽器打開原始檔，看每一段文字實際用哪個字體、哪個字重
- *   2. 加上程式會動態顯示的字（日期數字、營業中／休息中…）和營業時間常用字
+ *   2. 加上程式會動態顯示的字（如果頁面有程式的話）
  *   3. 把字體切成只含這些字的小檔，以 base64 塞進 FONTS:BEGIN ～ FONTS:END 之間
  *   4. 寫出 index.html
  *
  * 如果手上只剩成品 index.html：把 FONTS:BEGIN ～ FONTS:END 之間清空，
- * 存成 src/index.html 就是原始檔（這支程式在找不到原始檔時會自動這樣做）。
+ * 存成 index.src.html 就是原始檔（這支程式在找不到原始檔時會自動這樣做）。
  *
  * 需要：Node＋Playwright（Chromium）、Python 3＋fonttools＋brotli（pip install fonttools brotli）。
  * 字體原檔來自 npm 的 @fontsource 套件；第一次執行會自動下載到 tools/.fontsrc
@@ -24,7 +24,7 @@ const { execFileSync } = require('child_process');
 const { chromium } = require('playwright');
 
 const ROOT = path.resolve(__dirname, '..');
-const SRC = path.join(ROOT, 'src', 'index.html');
+const SRC = path.join(ROOT, 'index.src.html');
 const OUT = path.join(ROOT, 'index.html');
 const BEGIN = '/* FONTS:BEGIN */';
 const END = '/* FONTS:END */';
@@ -32,8 +32,6 @@ const NOTICE =
   '/* 內嵌字體子集：Noto Serif TC © Adobe；LXGW WenKai TC © The LXGW WenKai Project Authors。' +
   '皆為 SIL Open Font License 1.1（https://openfontlicense.org）。由 tools/build.js 產生，請勿手改。 */';
 
-// 目前頁面上還沒出現、但填營業時間時一定會用到的字，先放進手寫體。
-const HOURS_CHARS = '0123456789:–-、～至週一二三四五六日公休全年無國定假照常';
 
 function fontSource() {
   if (process.env.FONT_SRC) return process.env.FONT_SRC;
@@ -56,7 +54,7 @@ function ensureSource() {
   if (i < 0 || j < 0) throw new Error('index.html 裡找不到 FONTS:BEGIN／FONTS:END 標記');
   fs.mkdirSync(path.dirname(SRC), { recursive: true });
   fs.writeFileSync(SRC, built.slice(0, i + BEGIN.length) + '\n' + built.slice(j));
-  console.log('已從 index.html 還原 src/index.html');
+  console.log('已從 index.html 還原 index.src.html');
 }
 
 /* 頁面上每段文字 → { "字體|字重": "用到的字" } */
@@ -92,7 +90,7 @@ function scriptStrings(html) {
 (async () => {
   ensureSource();
   const html = fs.readFileSync(SRC, 'utf8');
-  if (!html.includes(BEGIN) || !html.includes(END)) throw new Error('src/index.html 裡找不到 FONTS:BEGIN／FONTS:END 標記');
+  if (!html.includes(BEGIN) || !html.includes(END)) throw new Error('index.src.html 裡找不到 FONTS:BEGIN／FONTS:END 標記');
 
   const found = await collectRoles();
   const roles = {};
@@ -101,7 +99,7 @@ function scriptStrings(html) {
     else console.warn('注意：有文字沒用到內嵌字體 →', key, [...new Set(chars)].join('').slice(0, 30));
   }
   const dynamic = scriptStrings(html);
-  for (const key of ['Receipt Hand|400', 'Receipt Hand|700']) roles[key] = (roles[key] || '') + dynamic + HOURS_CHARS;
+  if (dynamic) for (const key of ['Receipt Hand|400', 'Receipt Hand|700']) roles[key] = (roles[key] || '') + dynamic;
   for (const key of Object.keys(roles)) roles[key] = [...new Set(roles[key])].sort().join('');
 
   const tmp = path.join(os.tmpdir(), 'receipt-font-roles.json');
