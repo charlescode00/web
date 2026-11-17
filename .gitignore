@@ -1,0 +1,3 @@
+# 字體原檔（build 時自動下載，很大，不用進版本庫）
+tools/.fontsrc/
+node_modules/

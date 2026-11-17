@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  新金進五金行 — 單頁網站
+  視覺概念：一張放大的手開收據。
+    ・鉛字黑：店名（印在收據抬頭）
+    ・印刷紅：格線、欄位名稱、店章、按鈕（紅色印泥）
+    ・原子筆藍：手寫填上去的內容（賣什麼、地址、時間、電話）
+    ・牛皮紙：收據底下的紙袋（頁面底色、貨架插畫的底）
+    ・黃色標價籤：還沒拿到資料的地方，一律貼「待補」
+
+  維護備忘
+    ・原始檔是 src/index.html，成品是根目錄的 index.html（單一檔案，可直接上線）。
+      改內容請改 src/index.html，再執行 node tools/build.js 產生成品、
+      node tools/check.js 檢查字級、對比、按鈕大小。
+    ・要改的地方都用「★」標出來了。
+    ・字體是內嵌的（Noto Serif TC、LXGW WenKai TC 的子集，SIL OFL 1.1 授權），
+      只包含這一頁用到的字，所以改了文字一定要重新執行 build。
+      手上只有成品時：把 FONTS:BEGIN ～ FONTS:END 之間清空，就是原始檔。
+    ・營業時間還沒拿到。拿到後照「★ 營業時間」的說明填，
+      上方「現在」那一欄就會自動顯示營業中／休息中。
+-->
+<title>新金進五金行｜臺北大同區經營六十年的老字號五金行</title>
+<meta name="description" content="新金進五金行，臺北市大同區經營六十年的老字號五金行，販售各式家庭日用品與五金商品。地址：重慶北路三段293之1號。電話：02-2591-5243。">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:site_name" content="新金進五金行">
+<meta property="og:title" content="新金進五金行｜經營六十年的老字號五金行">
+<meta property="og:description" content="各式家庭日用品與五金商品。臺北市大同區重慶北路三段293之1號，電話 02-2591-5243。">
+<meta name="theme-color" content="#C6A16B">
+<meta name="color-scheme" content="only light">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='3' y='3' width='58' height='58' rx='7' fill='%23A0170F'/%3E%3Crect x='8.5' y='8.5' width='47' height='47' rx='3' fill='none' stroke='%23FAF6EA' stroke-width='1.6'/%3E%3Ctext x='32' y='46' font-size='38' font-weight='900' text-anchor='middle' fill='%23FAF6EA' font-family='serif'%3E%E9%87%91%3C/text%3E%3C/svg%3E">
+
+<!-- 給 Google 看的店家資料 ★ 營業時間拿到後，這裡也要補 openingHoursSpecification -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HardwareStore",
+  "name": "新金進五金行",
+  "telephone": "+886-2-2591-5243",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "重慶北路三段293之1號",
+    "addressLocality": "大同區",
+    "addressRegion": "臺北市",
+    "postalCode": "103",
+    "addressCountry": "TW"
+  }
+}
+</script>
+
+<style>
+/* FONTS:BEGIN */
+/* FONTS:END */
+
+/* ============ 四種墨色＋兩種紙 ============ */
+:root {
+  --paper: #FAF6EA;      /* 收據紙 */
+  --ink: #1D1A16;        /* 鉛字黑 */
+  --red: #A0170F;        /* 印刷紅／印泥 */
+  --blue: #1F2E86;       /* 原子筆藍 */
+  --kraft: #C6A16B;      /* 牛皮紙 */
+  --line-ink: #2B1B10;   /* 印在牛皮紙上的線條 */
+  --tag: #FFD23F;        /* 標價籤黃 */
+  --serif: "Receipt Serif", "Noto Serif TC", "Noto Serif CJK TC", "Songti TC", "PMingLiU", serif;
+  --hand: "Receipt Hand", "LXGW WenKai TC", "BiauKai", "DFKai-SB", "Kaiti TC", "標楷體", serif;
+  --kraft-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .35' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3  0 0 0 0 .17  0 0 0 0 .05  0 0 0 .55 -.12'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 16px 8px 120px;
+  padding-left: max(8px, env(safe-area-inset-left));
+  padding-right: max(8px, env(safe-area-inset-right));
+  padding-bottom: calc(116px + env(safe-area-inset-bottom));
+  background-color: var(--kraft);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(70, 40, 10, .07) 0, rgba(70, 40, 10, .07) 1px, transparent 1px, transparent 5px),
+    var(--kraft-tex);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.25rem;          /* 內文 20px */
+  line-height: 1.6;
+}
+
+h1, h2, p, table, figure { margin: 0; }
+
+.vh {                           /* 只給報讀軟體聽的文字 */
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+a:focus { outline: 4px solid var(--blue); outline-offset: 3px; }
+a:focus:not(:focus-visible) { outline: none; }
+
+/* ============ 收據紙 ============ */
+.sheet {
+  position: relative;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 12px 6px;
+  background: var(--paper);
+  /* 底下壓著複寫的第二聯（粉紅）、第三聯（黃） */
+  box-shadow:
+    3px 4px 0 #EFC3BE,
+    6px 8px 0 #F2DF9C,
+    6px 20px 24px rgba(60, 35, 10, .32);
+}
+.sheet::before,
+.sheet::after {                 /* 上下撕開的孔線 */
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 6px;
+  background-size: 14px 6px;
+  background-repeat: round no-repeat;
+}
+.sheet::before {
+  top: -6px;
+  background-image: radial-gradient(circle at 7px -1px, transparent 4px, var(--paper) 4.6px);
+}
+.sheet::after {
+  bottom: -6px;
+  background-image: radial-gradient(circle at 7px 7px, transparent 4px, var(--paper) 4.6px);
+}
+
+/* ============ 抬頭：店名＋店章＋一句話 ============ */
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-column-gap: 12px;
+  column-gap: 12px;
+  align-items: start;
+  padding: 22px 2px 14px;
+}
+.name {
+  grid-column: 1;
+  font-weight: 900;
+  font-size: 4rem;
+  font-size: clamp(3.4rem, 17.8vw, 5rem);
+  line-height: 1.12;
+  letter-spacing: .02em;
+}
+.name span { display: block; white-space: nowrap; }
+
+.intro {
+  grid-column: 1;
+  margin-top: 12px;
+}
+.intro span { display: inline-block; }
+
+.seal {                         /* 紅色店章：經營六十年 */
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  position: relative;
+  z-index: 2;
+  margin: 2px 0 -20px;          /* 故意蓋到下面的框線上 */
+  padding: 7px 9px 9px;
+  border: 3.5px solid var(--red);
+  border-radius: 6px;
+  color: var(--red);
+  font-weight: 900;
+  text-align: center;
+  transform: rotate(2.5deg);
+  mix-blend-mode: multiply;
+}
+.seal::before {                 /* 店章內框細線 */
+  content: "";
+  position: absolute;
+  top: 3px; right: 3px; bottom: 3px; left: 3px;
+  border: 1.2px solid var(--red);
+  border-radius: 3px;
+}
+.seal-top {
+  display: block;
+  font-size: 1.3rem;
+  line-height: 1.35;
+  letter-spacing: .08em;
+  padding-left: .08em;
+}
+.seal-main b {
+  display: block;
+  font-size: 3rem;
+  font-size: clamp(2.7rem, 14.2vw, 4rem);
+  line-height: 1.07;
+}
+
+/* ============ 收據表格 ============ */
+.form {
+  position: relative;
+  margin: 0 5.5px;
+  border: 1px solid var(--red);
+  outline: 2.5px solid var(--red);
+  outline-offset: 3px;
+}
+.row {
+  position: relative;
+  padding: 0 12px 16px;
+  border-top: 1.5px solid var(--red);
+}
+.row:first-child { border-top: 0; }
+
+.cap {                          /* 左上角的欄位名稱小格 */
+  display: inline-block;
+  margin: 0 0 8px -12px;
+  padding: 3px 12px 4px;
+  border-right: 1.5px solid var(--red);
+  border-bottom: 1.5px solid var(--red);
+  color: var(--red);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.sp2 {                          /* 兩個字撐成四個字寬：地　　址 */
+  display: inline-block;
+  letter-spacing: 2em;
+  margin-right: -2em;
+}
+
+/* ---- 今天／現在 ---- */
+.date {
+  color: var(--red);
+  line-height: 1.5;
+}
+.date b {
+  display: inline-block;
+  min-width: 1.3em;
+  margin: 0 .06em;
+  border-bottom: 1.5px dotted var(--red);
+  color: var(--blue);
+  font-family: var(--hand);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  text-align: center;
+}
+.date .wk { display: inline-block; margin-left: .5em; white-space: nowrap; }
+
+.now { margin-top: 8px; line-height: 1.4; }
+.now .lbl { color: var(--red); margin-right: .5em; }
+#status { color: var(--blue); font-family: var(--hand); }
+#status b {
+  position: relative;
+  display: inline-block;
+  padding: 0 .28em;
+  font-weight: 700;
+  font-size: 1.9rem;
+}
+#status b::after {              /* 用原子筆圈起來 */
+  content: "";
+  position: absolute;
+  top: -1px; right: -3px; bottom: -3px; left: -3px;
+  border: 2.5px solid var(--blue);
+  border-radius: 47% 53% 50% 50% / 56% 44% 56% 44%;
+  transform: rotate(-3deg);
+}
+#status small { display: block; margin-top: 2px; font-weight: 400; font-size: 1.75rem; }  /* 也是營業時間，≥ 28px */
+
+/* ---- 待補標價籤 ---- */
+.tbd {
+  display: inline-block;
+  position: relative;
+  padding: .02em .6em .02em 1.2em;
+  background: var(--tag);
+  color: var(--ink);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 1.75rem;
+  line-height: 1.4;
+  letter-spacing: .08em;
+  vertical-align: middle;
+  transform: rotate(-2deg);
+  -webkit-clip-path: polygon(.55em 0, 100% 0, 100% 100%, .55em 100%, 0 68%, 0 32%);
+  clip-path: polygon(.55em 0, 100% 0, 100% 100%, .55em 100%, 0 68%, 0 32%);
+}
+.tbd::before {                  /* 標價籤的穿線孔 */
+  content: "";
+  position: absolute;
+  left: .42em; top: 50%;
+  width: .32em; height: .32em;
+  margin-top: -.16em;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1.5px rgba(60, 35, 10, .55);
+}
+
+/* ---- 賣什麼：品名／數量 ---- */
+.row.goods { padding: 0; }
+.goods table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.goods th {
+  padding: 3px 12px 4px;
+  border-bottom: 1.5px solid var(--red);
+  color: var(--red);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+}
+.goods td {
+  padding: 9px 12px 8px;
+  border-bottom: 1.5px solid var(--red);
+  color: var(--blue);
+  font-family: var(--hand);
+  font-weight: 400;
+  font-size: 1.65rem;
+  line-height: 1.35;
+}
+.goods th + th,
+.goods td + td {
+  width: 1%;
+  border-left: 1.5px solid var(--red);
+  text-align: center;
+  white-space: nowrap;
+}
+.goods td .tbd { margin-left: .55em; }
+
+.shelf {                        /* 牛皮紙上的貨架插畫 */
+  padding: 14px 10px 8px;
+  background-color: var(--kraft);
+  background-image: var(--kraft-tex);
+  color: var(--line-ink);
+}
+.shelf svg { display: block; width: 100%; height: auto; }
+
+/* ---- 地址／營業時間／電話：手寫大字 ---- */
+.big {
+  color: var(--blue);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 2rem;              /* 32px */
+  line-height: 1.32;
+}
+.addr span { display: block; white-space: nowrap; }
+
+/* 營業時間：一列一段。星期用一般字重、時間用粗體；今天那一列前面打勾 */
+#hours [data-days] {
+  position: relative;
+  padding-left: 1.1em;
+}
+#hours [data-days] span { display: inline-block; white-space: nowrap; }
+#hours [data-days] span:first-child { margin-right: .5em; font-weight: 400; }
+#hours .is-today::before {
+  content: "";
+  position: absolute;
+  left: .18em; top: .3em;
+  width: .3em; height: .6em;
+  border: solid var(--blue);
+  border-width: 0 3px 3px 0;
+  transform: rotate(40deg);
+}
+
+.num {
+  display: inline-block;
+  min-height: 56px;
+  padding: 2px 0 12px;
+  color: var(--blue);
+  font-size: 2.2rem;
+  font-size: clamp(2.2rem, 11.2vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: .01em;
+  text-decoration: none;
+  white-space: nowrap;
+  background:
+    linear-gradient(var(--blue), var(--blue)) 0 100% / 100% 2px no-repeat,
+    linear-gradient(var(--blue), var(--blue)) 0 calc(100% - 5px) / 100% 2px no-repeat;
+}
+
+/* ---- 收據結尾 ---- */
+.thanks {
+  padding: 20px 0 16px;
+  color: var(--red);
+  font-size: 1.35rem;
+  letter-spacing: .7em;
+  text-align: center;
+  white-space: nowrap;
+}
+.thanks::before,
+.thanks::after {
+  content: "";
+  display: inline-block;
+  width: 1.6em;
+  height: 5px;
+  border-top: 1.5px solid var(--red);
+  border-bottom: 1.5px solid var(--red);
+  vertical-align: middle;
+}
+.thanks::before { margin-right: .7em; }
+
+/* ============ 固定在底部的兩顆印章按鈕 ============ */
+.bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 10;
+  padding: 10px;
+  padding-left: max(10px, env(safe-area-inset-left));
+  padding-right: max(10px, env(safe-area-inset-right));
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  background: var(--paper);
+  border-top: 2px dashed var(--red);
+  box-shadow: 0 -8px 18px rgba(60, 35, 10, .25);
+}
+.bar-in {
+  display: flex;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+.btn {
+  flex: 1 1 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 8px 6px;
+  border-radius: 6px;
+  background: var(--red);
+  color: var(--paper);
+  font-weight: 900;
+  font-size: 1.4rem;
+  letter-spacing: .06em;
+  text-decoration: none;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .18s ease, background-color .18s ease;
+}
+.btn + .btn { margin-left: 12px; }
+.btn::before {                  /* 印章內框 */
+  content: "";
+  position: absolute;
+  top: 4px; right: 4px; bottom: 4px; left: 4px;
+  border: 1.2px solid var(--paper);
+  border-radius: 3px;
+  pointer-events: none;
+}
+.btn:active { transform: scale(.97); background-color: #7E110B; }
+@media (hover: hover) {
+  .btn:hover { background-color: #86130C; }
+}
+.btn svg {
+  flex: none;
+  width: 1.5rem; height: 1.5rem;
+  margin-right: .4rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ============ 動態：只有店章輕輕蓋下去一次 ============ */
+@media (prefers-reduced-motion: no-preference) {
+  .seal { animation: stamp 1s cubic-bezier(.2, .7, .2, 1) .3s both; }
+  @keyframes stamp {
+    from { opacity: 0; transform: rotate(2.5deg) scale(1.1); }
+    to   { opacity: 1; transform: rotate(2.5deg) scale(1); }
+  }
+}
+
+/* ============ 很窄的手機 ============ */
+@media (max-width: 21.5em) {
+  .row { padding-left: 9px; padding-right: 9px; }
+  .cap { margin-left: -9px; }
+  .goods th, .goods td { padding-left: 9px; padding-right: 9px; }
+}
+
+/* ============ 比 320px 還窄（例如把網頁放大到 150%）：跟著畫面等比例縮，不要破版 ============ */
+@media (max-width: 19.9em) {
+  .name { font-size: 17.8vw; }
+  .seal-main b { font-size: 14.2vw; }
+  .seal-top { font-size: 6.4vw; }
+  .big { font-size: 10vw; }
+  .num { font-size: 10.3vw; }
+  .goods td { font-size: 8vw; }
+  .tbd { font-size: 8.6vw; }
+  #status b, #status small { font-size: 8.6vw; }
+  .btn { font-size: 6.6vw; letter-spacing: 0; }
+  .btn svg { width: 6.4vw; height: 6.4vw; margin-right: 1.4vw; }
+  .btn + .btn { margin-left: 8px; }
+  .thanks { letter-spacing: .3em; }
+}
+
+/* ============ 手機橫放：按鈕列矮一點，留空間給內容 ============ */
+@media (max-height: 26em) and (orientation: landscape) {
+  .bar { padding-top: 6px; padding-bottom: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
+  .btn { min-height: 56px; }
+}
+
+/* ============ 平板、桌機：整張收據放大 ============ */
+@media (min-width: 40em) {
+  html { font-size: 118.75%; }
+  body {
+    padding-top: 36px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+  .sheet { padding: 0 26px 8px; }
+  .head { padding: 30px 2px 18px; column-gap: 28px; grid-column-gap: 28px; }
+  .name { font-size: 4.1rem; }
+  .name span { display: inline; }
+  .seal-main b { font-size: 3.3rem; }
+  .seal { margin-bottom: -150px; margin-top: 0; }
+  .row { padding: 0 18px 20px; }
+  .cap { margin-left: -18px; padding-left: 18px; padding-right: 18px; }
+  .goods th, .goods td { padding-left: 18px; padding-right: 18px; }
+  .today { padding-right: 9.5rem; }
+  .addr span { display: inline; }
+  .addr span:first-child { display: block; }
+  .num { font-size: 3rem; }
+  .shelf { padding: 22px 26px 14px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="sheet">
+
+  <!-- ================= 抬頭 ================= -->
+  <header class="head">
+    <h1 class="name"><span>新金進</span><span>五金行</span></h1>
+
+    <div class="seal" role="img" aria-label="經營六十年">
+      <span class="seal-top" aria-hidden="true">經營</span>
+      <span class="seal-main" aria-hidden="true"><b>六</b><b>十</b><b>年</b></span>
+    </div>
+
+    <p class="intro"><span>街坊的老字號，</span><span>家裡要用的這裡找。</span></p>
+  </header>
+
+  <main class="form">
+
+    <!-- ================= 今天有沒有開 ================= -->
+    <section class="row today">
+      <h2 class="cap"><span class="sp2">今天</span></h2>
+      <p class="date" id="date" hidden><b id="d-y"></b>年<b id="d-m"></b>月<b id="d-d"></b>日<span class="wk">星期<b id="d-w"></b></span></p>
+      <p class="now"><span class="lbl">現在</span><span id="status"><span class="tbd">待補</span></span></p>
+    </section>
+
+    <!-- ================= 賣什麼 ================= -->
+    <section class="row goods">
+      <h2 class="vh">我們賣什麼</h2>
+      <table>
+        <thead>
+          <tr><th scope="col"><span class="sp2">品名</span></th><th scope="col">數量</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>家庭日用品</td><td>各式</td></tr>
+          <tr><td>五金商品</td><td>各式</td></tr>
+          <!-- ★ 主要品項：拿到後，把這一列換成實際品項（一列一樣） -->
+          <tr><td colspan="2">主要品項<span class="tbd">待補</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="shelf" role="img" aria-label="貨架插畫：掃把、拖把、碗盤、筷子、水桶、刷子與五金工具">
+        <svg viewBox="0 0 320 240" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- 鐵架 -->
+          <rect x="10" y="10" width="300" height="216"/>
+          <rect x="16" y="16" width="100" height="204"/>
+          <rect x="122" y="16" width="88" height="98"/>
+          <rect x="216" y="16" width="88" height="98"/>
+          <rect x="122" y="120" width="88" height="100"/>
+          <rect x="216" y="120" width="88" height="100"/>
+          <path d="M24 226v9M34 226v9M286 226v9M296 226v9M2 236h316"/>
+
+          <!-- 掛在層板上的標價籤 -->
+          <path d="M104 16v13M296 120v11" stroke-width="1.4"/>
+          <path d="M100 29h8l3 3v14H97V32zM292 131h8l3 3v14h-14v-14z" fill="#FFD23F" stroke-width="1.6"/>
+          <path d="M100.500 37h7M100.500 41.500h4.500M292.500 139h7M292.500 143.500h4.500" stroke-width="1.3"/>
+
+          <!-- 掃把 -->
+          <path d="M43 24 39 128" stroke-width="3"/>
+          <path d="M30 128h17l4 12H26z"/>
+          <path d="M26 140 18 214h44L51 140"/>
+          <path d="M32 144 28 210M38 144 37 210M43 144 46 210M47 144 54 210" stroke-width="1.5"/>
+          <path d="M24 160q15 5 30 0" stroke-width="1.5"/>
+
+          <!-- 拖把 -->
+          <path d="M86 24v114" stroke-width="3"/>
+          <rect x="76" y="138" width="20" height="10" rx="2"/>
+          <path d="M78 148C72 168 76 190 68 214M82 148c-2 22 0 44-5 66M86 148v66M90 148c2 22 0 44 5 66M94 148c6 20 2 42 10 66" stroke-width="1.7"/>
+
+          <!-- 盤子 -->
+          <ellipse cx="152" cy="84" rx="24" ry="5"/>
+          <ellipse cx="152" cy="84" rx="13" ry="2.4" stroke-width="1.5"/>
+          <path d="M128 90q24 8 48 0M128 96q24 8 48 0M128 102q24 8 48 0M128 108q24 8 48 0"/>
+
+          <!-- 筷子 -->
+          <path d="M184 78v30q10 5 20 0V78"/>
+          <ellipse cx="194" cy="78" rx="10" ry="3"/>
+          <path d="M189 76 182 30M192 76 189 26M195 76 196 24M198 76 203 27M200 76 207 33" stroke-width="1.8"/>
+
+          <!-- 水桶 -->
+          <ellipse cx="250" cy="66" rx="26" ry="5.5"/>
+          <path d="M224 66 231 109q19 7 38 0L276 66"/>
+          <path d="M224 66C224 32 276 32 276 66"/>
+          <path d="M227 84q23 8 46 0" stroke-width="1.5"/>
+
+          <!-- 刷子 -->
+          <path d="M292 16v8"/>
+          <circle cx="292" cy="27" r="3"/>
+          <rect x="288" y="30" width="8" height="34" rx="3"/>
+          <rect x="284" y="64" width="16" height="14" rx="2"/>
+          <path d="M286 78v16M289 78v17M292 78v18M295 78v17M298 78v16" stroke-width="1.5"/>
+
+          <!-- 鐵鎚 -->
+          <path d="M144 214 156 152M151 215 163 153M144 214h7"/>
+          <path d="M139 137 181 144 179 156 137 149z"/>
+          <path d="M181 144 189 147 188 153 179 156" />
+
+          <!-- 扳手 -->
+          <g transform="translate(193 178) rotate(8)">
+            <path d="M-4.5-47V-37H4.5V-47A11 11 0 1 1-4.5-47"/>
+            <path d="M-4-26.7V19M4-26.7V19"/>
+            <circle cx="0" cy="26" r="8"/>
+            <circle cx="0" cy="26" r="3.2" stroke-width="1.5"/>
+          </g>
+
+          <!-- 螺絲、螺帽 -->
+          <g transform="translate(244 176) rotate(-18)">
+            <path d="M-10-32h20v-6q-10-5-20 0z"/>
+            <path d="M-4.5-32V28L0 38 4.5 28V-32"/>
+            <path d="M-4.5-24 4.5-20M-4.5-16 4.5-12M-4.5-8 4.5-4M-4.5 0 4.5 4M-4.5 8 4.5 12M-4.5 16 4.5 20M-4.5 24 4.5 28" stroke-width="1.5"/>
+          </g>
+          <path d="M278 191 289 197.5V210.500L278 217 267 210.500V197.500z"/>
+          <circle cx="278" cy="204" r="5" stroke-width="1.5"/>
+          <path d="M284 150 293 155.200V165.600L284 170.800 275 165.600V155.200z"/>
+          <circle cx="284" cy="160.500" r="4" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ================= 地址 ================= -->
+    <section class="row">
+      <h2 class="cap"><span class="sp2">地址</span></h2>
+      <p class="big addr"><span>臺北市大同區</span><span>重慶北路三段</span><span>293之1號</span></p>
+    </section>
+
+    <!-- ================= 營業時間 ================= -->
+    <!-- ★ 營業時間：拿到後，把 #hours 裡面換成下面這種格式（一段時間一列）。
+         data-days 是星期（0=日、1=一…6=六，可寫 1-6 或 1,3,5），
+         data-open／data-close 是 24 小時制的開門、打烊時間；公休那列不寫 open／close。
+         不支援跨午夜（打烊時間要晚於開門時間）。星期寫錯的那一列會被略過，不會影響其他列。
+         填好後，把上方「現在」那行改成 <p class="now" hidden>，並清空 #status 裡的「待補」，
+         這樣程式沒跑起來時不會留著過期的「待補」。
+         <p class="big" data-days="D-D" data-open="HH:MM" data-close="HH:MM"><span>週Ｘ至週Ｘ</span><span>HH:MM–HH:MM</span></p>
+         <p class="big" data-days="D"><span>週Ｘ</span><span>公休</span></p>
+    -->
+    <section class="row">
+      <h2 class="cap">營業時間</h2>
+      <div id="hours">
+        <p class="big"><span class="tbd">待補</span></p>
+      </div>
+    </section>
+
+    <!-- ================= 電話 ================= -->
+    <section class="row">
+      <h2 class="cap"><span class="sp2">電話</span></h2>
+      <p class="big"><a class="num" href="tel:+886225915243">02-2591-5243</a></p>
+    </section>
+
+  </main>
+
+  <p class="thanks">謝謝惠顧</p>
+
+</div>
+
+<!-- ================= 隨時都在的兩顆按鈕 ================= -->
+<nav class="bar" aria-label="打電話與地圖導航">
+  <div class="bar-in">
+    <a class="btn" href="tel:+886225915243">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      打電話
+    </a>
+    <a class="btn" href="https://www.google.com/maps/search/?api=1&amp;query=%E8%87%BA%E5%8C%97%E5%B8%82%E5%A4%A7%E5%90%8C%E5%8D%80%E9%87%8D%E6%85%B6%E5%8C%97%E8%B7%AF%E4%B8%89%E6%AE%B5293%E4%B9%8B1%E8%99%9F">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      地圖導航
+    </a>
+  </div>
+</nav>
+
+<script>
+/* 收據上的日期，以及「現在有沒有開」。時間一律用臺灣時間（UTC+8）。 */
+(function () {
+  var WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+
+  function taipei() {
+    var t = new Date(Date.now() + 8 * 3600000);
+    return {
+      year: t.getUTCFullYear() - 1911,
+      month: t.getUTCMonth() + 1,
+      day: t.getUTCDate(),
+      week: t.getUTCDay(),
+      mins: t.getUTCHours() * 60 + t.getUTCMinutes()
+    };
+  }
+
+  function toMins(s) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(s || '');
+    return m ? (+m[1]) * 60 + (+m[2]) : null;
+  }
+
+  /* 讀「營業時間」那一格裡的 data-days／data-open／data-close */
+  function readHours() {
+    var rows = document.querySelectorAll('#hours [data-days]');
+    if (!rows.length) return null;
+    var table = [[], [], [], [], [], [], []];
+    for (var i = 0; i < rows.length; i++) {
+      var open = toMins(rows[i].getAttribute('data-open'));
+      var close = toMins(rows[i].getAttribute('data-close'));
+      var parts = rows[i].getAttribute('data-days').split(',');
+      rows[i]._days = [];
+      for (var j = 0; j < parts.length; j++) {
+        var r = /^\s*([0-6])\s*(?:-\s*([0-6])\s*)?$/.exec(parts[j]);
+        if (!r) {                             /* 星期寫錯：略過這一段，不要卡住整頁 */
+          if (window.console) console.warn('bad data-days: ' + parts[j]);   /* 這行用英文，免得多嵌字體 */
+          continue;
+        }
+        var a = +r[1], b = r[2] === undefined ? a : +r[2];
+        for (var d = a, n = 0; n < 7; d = (d + 1) % 7, n++) {
+          rows[i]._days.push(d);
+          if (open !== null && close !== null && close > open) table[d].push([open, close]);
+          if (d === b) break;
+        }
+      }
+    }
+    for (var k = 0; k < 7; k++) table[k].sort(function (x, y) { return x[0] - y[0]; });
+    return { table: table, rows: rows };
+  }
+
+  function clock(mins) {
+    var h = Math.floor(mins / 60), m = mins % 60;
+    var part = h < 6 ? '凌晨' : h < 12 ? '上午' : h === 12 ? '中午' : h < 18 ? '下午' : '晚上';
+    var h12 = h % 12 === 0 ? 12 : h % 12;
+    return part + ' ' + h12 + ':' + (m < 10 ? '0' : '') + m;
+  }
+
+  function nextOpen(table, now) {
+    for (var i = 0; i < 8; i++) {
+      var d = (now.week + i) % 7;
+      for (var j = 0; j < table[d].length; j++) {
+        if (i > 0 || table[d][j][0] > now.mins) {
+          var day = i === 0 ? '' : i === 1 ? '明天 ' : '週' + WEEK[d] + ' ';
+          return day + clock(table[d][j][0]) + ' 開門';
+        }
+      }
+    }
+    return '';
+  }
+
+  function render() {
+    var now = taipei();
+
+    var date = document.getElementById('date');
+    document.getElementById('d-y').textContent = now.year;
+    document.getElementById('d-m').textContent = now.month;
+    document.getElementById('d-d').textContent = now.day;
+    document.getElementById('d-w').textContent = WEEK[now.week];
+    date.hidden = false;
+
+    var hours = readHours();
+    if (!hours) return;                       /* 營業時間還沒填：保留「待補」 */
+
+    var today = hours.table[now.week], word = '', note = '';
+    for (var i = 0; i < today.length; i++) {
+      if (now.mins >= today[i][0] && now.mins < today[i][1]) {
+        word = '營業中';
+        note = '到 ' + clock(today[i][1]);
+      }
+    }
+    if (!word) {
+      word = today.length ? '休息中' : '今日公休';
+      note = nextOpen(hours.table, now);
+    }
+    for (var r = 0; r < hours.rows.length; r++) {
+      var isToday = hours.rows[r]._days.indexOf(now.week) > -1;
+      hours.rows[r].className = hours.rows[r].className.replace(/\s*is-today/, '') + (isToday ? ' is-today' : '');
+    }
+
+    var status = document.getElementById('status');
+    status.parentNode.hidden = false;
+    if (status.getAttribute('data-shown') === word + '|' + note) return;   /* 沒變就不動畫面 */
+    status.setAttribute('data-shown', word + '|' + note);
+    status.textContent = '';
+    var b = document.createElement('b');
+    b.textContent = word;
+    status.appendChild(b);
+    if (note) {
+      var s = document.createElement('small');
+      s.textContent = note;
+      status.appendChild(s);
+    }
+  }
+
+  render();
+  setInterval(render, 60000);
+})();
+</script>
+</body>
+</html>
