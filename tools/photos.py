@@ -10,12 +10,12 @@
 import os
 import sys
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageEnhance, ImageOps
 
 WIDTH = 1000
 QUALITY = 74
 
-# 網頁上的檔名 → (原始檔名, 裁切範圍 左, 上, 右, 下；以原始照片的像素計)
+# 網頁上的檔名 → (原始檔名, 裁切範圍 左, 上, 右, 下；以原始照片的像素計[, 亮度倍數])
 PHOTOS = {
     "storefront": ("IMG20261117114918.jpg", (0, 0, 3072, 2355)),     # 店門口
     "pots":       ("IMG20261117111633.jpg", (123, 82, 3072, 2048)),  # 鍋具
@@ -23,6 +23,8 @@ PHOTOS = {
     "mops":       ("IMG20261117111649.jpg", (614, 1311, 3072, 2949)),# 清潔用具
     "buckets":    ("IMG20261117111646.jpg", (123, 2253, 2458, 3809)),# 生活用品
     "thermos":    ("IMG20261117111628.jpg", (225, 41, 2560, 1597)),  # 保溫保鮮
+    "sponges":    ("IMG20261118070723.jpg", (696, 1024, 3072, 2601), 1.15),  # 清潔用具：菜瓜布（原照偏暗）
+    "wrap":       ("IMG20261118070744.jpg", (0, 0, 2150, 1434)),     # 廚房小物：保鮮膜
 }
 
 
@@ -32,9 +34,11 @@ def main():
     src = sys.argv[1]
     out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "images")
     os.makedirs(out_dir, exist_ok=True)
-    for name, (filename, box) in PHOTOS.items():
+    for name, (filename, box, *bright) in PHOTOS.items():
         im = ImageOps.exif_transpose(Image.open(os.path.join(src, filename))).convert("RGB")
         im = ImageOps.autocontrast(im.crop(box), cutoff=0.4)
+        if bright:
+            im = ImageEnhance.Brightness(im).enhance(bright[0])
         im = im.resize((WIDTH, round(im.height * WIDTH / im.width)), Image.LANCZOS)
         out = os.path.join(out_dir, name + ".jpg")
         im.save(out, "JPEG", quality=QUALITY, optimize=True, progressive=True)

@@ -28,6 +28,13 @@
 <meta property="og:site_name" content="新金進五金行">
 <meta property="og:title" content="新金進五金行｜經營六十年的老字號五金行">
 <meta property="og:description" content="各式家庭日用品與五金商品。臺北市大同區重慶北路三段293之1號，電話 02-2591-5243。">
+<!-- ★ 網址：放在 GitHub Pages。之後若換成自己的網域，這三行一起改 -->
+<link rel="canonical" href="https://charlescode00.github.io/web/">
+<meta property="og:url" content="https://charlescode00.github.io/web/">
+<meta property="og:image" content="https://charlescode00.github.io/web/images/storefront.jpg">
+<meta property="og:image:width" content="1000">
+<meta property="og:image:height" content="767">
+<meta property="og:image:alt" content="新金進五金行的店門口">
 <meta name="theme-color" content="#C6A16B">
 <meta name="color-scheme" content="only light">
 <meta name="format-detection" content="telephone=no">
@@ -286,6 +293,8 @@ a:focus:not(:focus-visible) { outline: none; }
 .snap { transform: rotate(-.7deg); }
 .items li:nth-child(even) .snap { transform: rotate(.6deg); }
 .items li:nth-child(even) .snap::before { left: 30%; transform: rotate(4deg); }
+.snap + .snap { margin-top: 28px; transform: rotate(.9deg); }       /* 同一類的第二張，歪的方向相反 */
+.snap + .snap::before { left: 68%; transform: rotate(-5deg); }
 
 /* ---- 地址／電話：手寫大字 ---- */
 .big {
@@ -508,6 +517,7 @@ a:focus:not(:focus-visible) { outline: none; }
             <h3 class="cat"><span class="no">3</span>清潔用具</h3>
             <p class="list"><span>掃把、</span><span>棉紗拖把、</span><span>好神拖旋轉拖把、</span><span>刷子、</span><span>菜瓜布、</span><span>垃圾袋、</span><span>清潔劑、</span><span>手套</span></p>
             <figure class="snap"><img src="images/mops.jpg" alt="紅色握把的棉紗拖把與掃把" width="1000" height="666" loading="lazy" decoding="async"></figure>
+            <figure class="snap"><img src="images/sponges.jpg" alt="架上一疊疊綠色菜瓜布與黃色海綿" width="1000" height="664" loading="lazy" decoding="async"></figure>
           </li>
           <li>
             <h3 class="cat"><span class="no">4</span>生活用品</h3>
@@ -522,6 +532,7 @@ a:focus:not(:focus-visible) { outline: none; }
           <li>
             <h3 class="cat"><span class="no">6</span>廚房小物</h3>
             <p class="list"><span>保鮮膜、</span><span>鋁箔紙、</span><span>砧板、</span><span>鐵夾、</span><span>鐵筷、</span><span>木筷</span></p>
+            <figure class="snap"><img src="images/wrap.jpg" alt="架上整排的南亞保鮮膜，旁邊掛著一卡卡掛勾" width="1000" height="667" loading="lazy" decoding="async"></figure>
           </li>
           <li>
             <h3 class="cat"><span class="no">7</span>手工具</h3>
