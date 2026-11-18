@@ -1,5 +1,7 @@
 # 新金進五金行 網站
 
+網站：https://charlescode00.github.io/web/
+
 臺北市大同區重慶北路三段293之1號，經營六十年的老字號五金行。單頁網站，給附近居民和第一次找上門的人用手機看：
 這家店賣什麼、在哪裡、怎麼打電話。
 
@@ -34,6 +36,12 @@ node tools/build.js
 
 ```bash
 node tools/check.js 截圖資料夾
+```
+
+推上 GitHub 一兩分鐘後，GitHub Pages 會自動更新網站。檢查線上版：
+
+```bash
+CHECK_URL=https://charlescode00.github.io/web/ node tools/check.js 截圖資料夾
 ```
 
 字體只內嵌「頁面上有用到的字」，所以改了文字一定要重跑 `build.js`，否則新字會掉回系統字體。

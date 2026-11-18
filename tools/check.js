@@ -3,6 +3,7 @@
  * 自我檢查：用幾種螢幕寬度打開 index.html，檢查易讀性的硬性條件，並存下截圖。
  *
  *     node tools/check.js [截圖輸出資料夾]
+ *     CHECK_URL=https://charlescode00.github.io/web/ node tools/check.js [截圖輸出資料夾]   ← 檢查線上網站
  *
  * 檢查項目
  *   ・沒有橫向捲動、文字沒有超出畫面或被裁掉
@@ -22,6 +23,8 @@ const { chromium } = require('playwright');
 
 const HTML = path.resolve(__dirname, '..', 'index.html');
 const OUT = process.argv[2] ? path.resolve(process.argv[2]) : null;
+const TARGET = process.env.CHECK_URL || 'file://' + HTML;
+const ORIGIN = TARGET.startsWith('file:') ? 'file:' : new URL(TARGET).origin;
 
 const SIZES = [
   { name: 'phone-320', width: 320, height: 568 },
@@ -163,10 +166,14 @@ function audit() {
     const context = await browser.newContext({ viewport: { width: size.width, height: size.height }, locale: 'zh-TW' });
     const page = await context.newPage();
     const external = [], errors = [];
-    page.on('request', (r) => { if (!/^(file|data):/.test(r.url())) external.push(r.url()); });
+    page.on('request', (r) => {
+      const u = r.url();
+      if (!u.startsWith('data:') && !u.startsWith(ORIGIN)) external.push(u);   // 只能連自己的網站
+    });
+    page.on('response', (r) => { if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`); });
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
     page.on('pageerror', (e) => errors.push(String(e)));
-    await page.goto('file://' + HTML);
+    await page.goto(TARGET);
     await page.evaluate(() => document.fonts.ready);
     await page.evaluate(async () => {             // 一路捲到底，讓延遲載入的照片都載進來
       for (let y = 0; y < document.documentElement.scrollHeight; y += innerHeight / 2) {
